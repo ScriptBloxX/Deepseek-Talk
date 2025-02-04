@@ -2,6 +2,7 @@ import whisper
 import ollama
 from TTS.api import TTS
 import warnings
+from core.audio_utils import play_audio
 warnings.filterwarnings("ignore", category=UserWarning, message=".*torch.load.*")
 
 setup_role = {
@@ -31,6 +32,7 @@ def text_to_speech(name, text):
     tts.tts_to_file(text,speaker_wav="./target/speaker-jp.wav",language="ja",file_path=f"./output/{name}.wav")
 
     print(f"Voice-Output: './output/{name}.wav'")
+    play_audio(f"output/{name}.wav")
 
 def main(audio_path):
     text = speech_to_text(audio_path)

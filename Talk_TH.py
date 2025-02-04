@@ -2,7 +2,7 @@ import whisper
 import ollama
 from TTS.api import TTS
 from pydub import AudioSegment
-from pydub.effects import speedup
+from core.audio_utils import play_audio
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*torch.load.*")
 
@@ -47,6 +47,7 @@ def text_to_speech(name, lang, text):
 
     sound.export(f"./output/{name}.wav", format="wav")
     print(f"Adjusted Voice-Output: ./output/{name}.wav")
+    play_audio(f"output/{name}.wav")
 
 def main(audio_path, lang):
     text = speech_to_text(audio_path)
