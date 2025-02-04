@@ -170,3 +170,4 @@ cython_debug/
 .pypirc
 
 test
+output/nene_response.wav

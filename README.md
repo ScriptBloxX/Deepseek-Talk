@@ -1,5 +1,5 @@
 # Nene AI - Voice Chat Assistant (Developing)
-
+![Nene](/other/Nene.png)
 ## Overview
 
 Nene AI is an advanced voice-based assistant designed for seamless real-time interactions. It can:
@@ -105,6 +105,7 @@ The program will:
 3. Generate a response using DeepSeek-R1 14B
 4. Convert the response into a voice output
 5. Play the generated voice
+![TerminalPreview](/other/Terminal.png)
 
 ## Notes
 - The voice tuning applies pitch and filter modifications for a natural Thai accent.
