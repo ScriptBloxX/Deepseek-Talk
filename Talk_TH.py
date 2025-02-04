@@ -57,5 +57,5 @@ def main(audio_path, lang):
         print(f"คำตอบจาก Nene: {response_text}")
         text_to_speech("ro-th", lang, response_text)
 
-audio_path = "./voice/input.m4a"
+audio_path = "./voice/input-th.m4a"
 main(audio_path, 'tha')
