@@ -23,9 +23,9 @@ Nene AI is an advanced voice-based assistant designed for seamless real-time int
 
 Hardware
 
-- GPU: Recommended RTX 2050 or higher for optimal performance
-- RAM: Minimum 8GB, recommended 16GB+
-- Storage: At least 5GB free space
+- GPU: Recommended RTX 3070 or higher for optimal performance
+- RAM: Minimum 16GB, recommended 32GB+
+- Storage: At least ~30GB free space
 - OS: Windows 10/11, macOS, or Linux
 
 ## Setup Instructions
