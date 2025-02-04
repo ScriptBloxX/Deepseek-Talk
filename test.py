@@ -39,24 +39,29 @@ def text_to_speech(text):
     # โหลดโมเดล Coqui TTS สำหรับเสียงที่คุณต้องการ
     # print(TTS().list_models())
 
-    tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2",language="th")
+    # IT'S WORK CUTE JAPAN GIRL
+    tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
+    tts.tts_to_file(text,speaker_wav="./target/speaker-jp.wav",language="ja",file_path="./output/output_audio.wav")
 
-    # พูดข้อความด้วยเสียงที่สร้างจากโมเดล
-    tts.tts_to_file(text, "output_audio.wav")
-    print(f"ข้อความที่แปลงเป็นเสียงแล้วถูกบันทึกในไฟล์ 'output_audio.wav'")
+    # tts = TTS(model_name="tts_models/tha/fairseq/vits")
+    # tts.tts_with_vc_to_file(text,speaker_wav="./target/speaker.wav",file_path=f"./output/{text}-1.wav")
+    tts.tts_with_vc_to_file(text,speaker_wav="./target/jp-3.wav",file_path=f"./output/{text}-2.wav")
+
+    print(f"Voice-Output: './output/{text}.wav'")
 
 # ฟังก์ชันหลัก
 def main(audio_path):
     # แปลงเสียงเป็นข้อความ
-    text = speech_to_text(audio_path)
-    print(f"ข้อความจากเสียง: {text}")
+    # text = speech_to_text(audio_path)
+    # print(f"ข้อความจากเสียง: {text}")
 
     # รับคำตอบจาก DeepSeek
-    response_text = get_response_from_deepseek(text)
-    if response_text:
-        print(f"คำตอบจาก Nene: {response_text}")
-        # แปลงข้อความเป็นเสียง
-        text_to_speech(response_text)
+    # response_text = get_response_from_deepseek(text)
+    # if response_text:
+    #     print(f"คำตอบจาก Nene: {response_text}")
+    #     # แปลงข้อความเป็นเสียง
+    #     text_to_speech(response_text)
+    text_to_speech("こんにちは、みんな今日はねねが天気を報告します。夢ならばどれほどよかったでしょう 未だにあなたのことを夢にみる 忘れた物を取りに帰るように")
 
 # ตัวอย่างไฟล์เสียงที่ต้องการแปลง
 audio_path = "./voice/input.m4a"  # ปรับตามที่อยู่ไฟล์ของคุณ
