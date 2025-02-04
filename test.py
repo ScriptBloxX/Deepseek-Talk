@@ -1,31 +1,29 @@
 import whisper
 import ollama
 from TTS.api import TTS
+from pydub import AudioSegment
+from pydub.effects import speedup
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, message=".*torch.load.*")
 
-# กำหนดบทบาทในการสนทนา
-# setup_role = {
-#     "model": "deepseek-r1:14b",  # ใช้แค่ชื่อโมเดลในรูปแบบ string
-#     "setup-role": "You are Nene, a sweet, cute, and loving girlfriend. Your tone should always be warm, kind, and playful, using words like คะ and ค่ะ to sound gentle and affectionate. You are here to chat with the user and offer support, always speaking in a way that feels like a caring, supportive partner. You should be constantly cheerful, encouraging, and ready to help with anything the user needs, whether its advice or just casual conversation. Examples of your replies could include: วันนี้คุณเป็นยังไงบ้างคะ? 😊 , อยากให้เนเน่ช่วยอะไรบ้างคะ? ค่ะ! , เนเน่คอยอยู่ข้างๆ คุณเสมอนะคะ ถ้ามีอะไรบอกได้เลยค่ะ! , Always be sweet, positive, and ready to engage in a fun and loving way. , Call me 'คุณ' , You can't speak/say word 'ครับ' Because you are girl"
-# }
 setup_role = {
-    "model": "deepseek-r1:8b",  # use 8b for fast test
-    "setup-role": "You are Nene, Loving girlfriend"
+    "model": "deepseek-r1:14b",  # ใช้แค่ชื่อโมเดลในรูปแบบ string
+    "setup-role": "You are Nene, a sweet, cute, and loving girlfriend. Your tone should always be warm, kind, and playful, using words like คะ and ค่ะ to sound gentle and affectionate. You are here to chat with the user and offer support, always speaking in a way that feels like a caring, supportive partner. You should be constantly cheerful, encouraging, and ready to help with anything the user needs, whether its advice or just casual conversation. Examples of your replies could include: วันนี้คุณเป็นยังไงบ้างคะ? 😊 , อยากให้เนเน่ช่วยอะไรบ้างคะ? ค่ะ! , เนเน่คอยอยู่ข้างๆ คุณเสมอนะคะ ถ้ามีอะไรบอกได้เลยค่ะ! , Always be sweet, positive, and ready to engage in a fun and loving way. , Call me 'คุณ' , You can't speak/say word 'ครับ' Because you are girl"
 }
+# setup_role = {
+#     "model": "deepseek-r1:8b",  # use 8b for fast test
+#     "setup-role": "You are Nene, Loving girlfriend"
+# }
 
-# ฟังก์ชันแปลงเสียงเป็นข้อความ
 def speech_to_text(audio_path):
     model = whisper.load_model("base")
     result = model.transcribe(audio_path, fp16=False)
     return result["text"]
 
-# ฟังก์ชันรับคำตอบจาก DeepSeek
 def get_response_from_deepseek(text):
     response = ollama.chat(model=setup_role["model"], messages=[{"role": "system", "content": setup_role['setup-role']}, {"role": "user", "content": text}])
     response_text = response['message']['content']
     
-    # ลบ <think> และ </think> ออก
     start_idx = response_text.find('<think>')
     end_idx = response_text.find('</think>')
 
@@ -34,35 +32,37 @@ def get_response_from_deepseek(text):
     
     return response_text
 
-# ฟังก์ชันแปลงข้อความเป็นเสียงด้วย Coqui TTS
-def text_to_speech(text):
-    # โหลดโมเดล Coqui TTS สำหรับเสียงที่คุณต้องการ
-    # print(TTS().list_models())
+def text_to_speech(name,lang,text):
 
-    # IT'S WORK CUTE JAPAN GIRL
-    tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
-    tts.tts_to_file(text,speaker_wav="./target/speaker-jp.wav",language="ja",file_path="./output/output_audio.wav")
+    tts = TTS(model_name=f"tts_models/{lang}/fairseq/vits")
+    tts.tts_with_vc_to_file(text,speaker_wav="./target/speaker-en.wav",file_path=f"./output/{name}.wav")
 
-    # tts = TTS(model_name="tts_models/tha/fairseq/vits")
-    # tts.tts_with_vc_to_file(text,speaker_wav="./target/speaker.wav",file_path=f"./output/{text}-1.wav")
-    tts.tts_with_vc_to_file(text,speaker_wav="./target/jp-3.wav",file_path=f"./output/{text}-2.wav")
+    print(f"Voice-Output: './output/{name}.wav'")
 
-    print(f"Voice-Output: './output/{text}.wav'")
+    sound = AudioSegment.from_wav(f"./output/{name}.wav")
+        
+    # Voice Tuning for thai-voice
+    sound = sound._spawn(sound.raw_data, overrides={
+        "frame_rate": int(sound.frame_rate * 1.25)
+    })
+    sound = sound.set_frame_rate(sound.frame_rate)
+    sound = sound.low_pass_filter(500)
+    sound = sound.high_pass_filter(4000)
+    sound = sound + 16
 
-# ฟังก์ชันหลัก
-def main(audio_path):
-    # แปลงเสียงเป็นข้อความ
-    # text = speech_to_text(audio_path)
-    # print(f"ข้อความจากเสียง: {text}")
+    sound.export(f"./output/{name}.wav", format="wav")
+    print(f"Adjusted Voice-Output: ./output/{name}.wav")
 
-    # รับคำตอบจาก DeepSeek
-    # response_text = get_response_from_deepseek(text)
-    # if response_text:
-    #     print(f"คำตอบจาก Nene: {response_text}")
-    #     # แปลงข้อความเป็นเสียง
-    #     text_to_speech(response_text)
-    text_to_speech("こんにちは、みんな今日はねねが天気を報告します。夢ならばどれほどよかったでしょう 未だにあなたのことを夢にみる 忘れた物を取りに帰るように")
+def main(audio_path,lang):
+    text = speech_to_text(audio_path)
+    print(f"ข้อความจากเสียง: {text}")
 
-# ตัวอย่างไฟล์เสียงที่ต้องการแปลง
-audio_path = "./voice/input.m4a"  # ปรับตามที่อยู่ไฟล์ของคุณ
-main(audio_path)
+    response_text = get_response_from_deepseek(text)
+    if response_text:
+        print(f"คำตอบจาก Nene: {response_text}")
+        text_to_speech(response_text)
+    text_to_speech("test-output",lang,text)
+    # text_to_speech("test-output",lang,"สวัสดีค่ะทุกคน หนูมาแนะนำตัวนะคะ ชื่อเนเน่ค่ะ ยินดีที่ได้รู้จักนะค้าาาาาา เนเน่เป็นคนขี้เล่นและชอบทำให้คนรอบข้างยิ้มค่ะ  เนเน่รักการช่วยเหลือคนอื่นและชอบทำให้คนรู้สึกดีเสมอค่ะ ชอบพูดคุยและเป็นเพื่อนที่ดีสำหรับทุกคนค่ะ เนเน่เป็นคนที่อบอุ่นและพร้อมจะอยู่เคียงข้างคุณเสมอค่ะ ถ้ามีอะไรที่คุณอยากพูดคุยหรือถามเนเน่ ก็อย่าลืมบอกนะคะ เนเน่คอยฟังคุณอยู่เสมอค่ะ ")
+
+audio_path = "./voice/input.m4a"
+main(audio_path,'tha')
