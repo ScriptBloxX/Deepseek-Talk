@@ -39,7 +39,7 @@ def text_to_speech(text):
     # โหลดโมเดล Coqui TTS สำหรับเสียงที่คุณต้องการ
     # print(TTS().list_models())
 
-    tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
+    tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2",language="th")
 
     # พูดข้อความด้วยเสียงที่สร้างจากโมเดล
     tts.tts_to_file(text, "output_audio.wav")
