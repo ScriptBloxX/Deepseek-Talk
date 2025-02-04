@@ -56,7 +56,7 @@ def main(audio_path, lang):
     response_text = get_response_from_deepseek(text)
     if response_text:
         print(f"คำตอบจาก Nene: {response_text}")
-        text_to_speech("response-output", lang, response_text)
+        text_to_speech("ro-th", lang, response_text)
 
 audio_path = "./voice/input.m4a"
 main(audio_path, 'tha')

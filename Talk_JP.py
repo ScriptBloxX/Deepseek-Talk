@@ -31,7 +31,7 @@ def get_response_from_deepseek(text):
 
 def text_to_speech(name, text):
     tts = TTS(model_name="tts_models/multilingual/multi-dataset/xtts_v2")
-    tts.tts_to_file(text,speaker_wav="./target/speaker-jp.wav",language="ja",file_path="./output/output_audio.wav")
+    tts.tts_to_file(text,speaker_wav="./target/speaker-jp.wav",language="ja",file_path=f"./output/{name}.wav")
 
     print(f"Voice-Output: './output/{name}.wav'")
 
@@ -42,7 +42,7 @@ def main(audio_path):
     response_text = get_response_from_deepseek(text)
     if response_text:
         print(f"คำตอบจาก Nene: {response_text}")
-        text_to_speech("response-output", response_text)
+        text_to_speech("ro-jp", response_text)
 
 audio_path = "./voice/input-jp.m4a"
 main(audio_path)
