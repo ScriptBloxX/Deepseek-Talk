@@ -171,3 +171,7 @@ cython_debug/
 
 test
 output/nene_response.wav
+
+# test server
+run_server.py
+ีืีunuse_model
