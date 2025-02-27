@@ -136,8 +136,3 @@ The program will:
 
 ## License
 This project is open-source and free to use under the MIT License.
-
----
-🎤 **Enjoy chatting with Nene!** 😊
-````
-
