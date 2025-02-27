@@ -4,6 +4,11 @@ import requests
 import json
 import wave
 import keyboard
+import time
+import threading
+import random
+import ollama
+from googleapiclient.discovery import build
 from TTS.api import TTS
 from pydub import AudioSegment
 from core.audio_utils import play_audio
@@ -11,16 +16,16 @@ from langdetect import detect
 import whisper
 from dotenv import load_dotenv
 import pyaudio
-import time
-import threading
-import random
-import ollama
 
 load_dotenv()
 api_key = os.getenv('OPENROUTER_API_KEY')
+youtube_api_key = os.getenv('YOUTUBE_API_KEY')
+live_chat_id = os.getenv('LIVE_CHAT_ID')
 
 if api_key is None:
     raise ValueError("API Key not found. Please check your .env file.")
+
+youtube = build('youtube', 'v3', developerKey=youtube_api_key)
 
 setup_role = {
     "model": "deepseek-r1:14b",
@@ -33,6 +38,29 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 stop_idle_sound = False
 stop_thinking_sound = False
+
+def get_youtube_live_chat():
+    """ Fetches live chat messages from YouTube """
+    global live_chat_id
+    response = youtube.liveChatMessages().list(
+        liveChatId=live_chat_id,
+        part='snippet',
+        maxResults=10
+    ).execute()
+    messages = [item['snippet']['displayMessage'] for item in response['items']]
+    return messages
+
+def process_youtube_chat():
+    """ Continuously fetch messages and respond """
+    while True:
+        messages = get_youtube_live_chat()
+        for text in messages:
+            lang = detect_language(text)
+            response_text = get_response_from_deepseek(text, lang, use_api=True)
+            print(f"[YT Chat] {text} -> [Nene] {response_text}")
+            text_to_speech("nene_response", lang, response_text)
+        time.sleep(10)
+
 
 def speech_to_text(audio_path):
     print("[🧡 Process] Convert audio to text\n")
@@ -196,7 +224,7 @@ def sound_loop(sound_type,lang="random"):
 def main():
     global stop_thinking_sound, stop_idle_sound
     print("Welcome to Chat with Nene! 💖 (Type 'exit' or 'quit' to leave)")
-    run_mode = input("\n👧🏼 Choose run mode (1: Local, 2: Server, exit: Quit): ").strip().lower()
+    run_mode = input("\n👧🏼 Choose run mode (1: Local, 2: Server, 3: YouTube Live, exit: Quit): ").strip().lower()
 
     while True:
         stop_idle_sound = False
@@ -210,6 +238,11 @@ def main():
             use_api = False
         elif run_mode == "2":
             use_api = True
+        elif run_mode == "3":
+            print("Starting YouTube Live Mode... 🎥")
+            youtube_thread = threading.Thread(target=process_youtube_chat, daemon=True)
+            youtube_thread.start()
+            youtube_thread.join()
         else:
             print("[❌ Error] Invalid choice. Please enter 1 or 2.")
             continue
