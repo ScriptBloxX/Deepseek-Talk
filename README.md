@@ -44,15 +44,33 @@ project_root/
 │   ├── audio_utils.py
 │-- voice/
 │   ├── input-th.m4a
+│   ├── idle/
+│   │   ├── en_idle_1.wav
+│   │   ├── en_idle_2.wav
+│   │   ├── jp_idle_1.wav
+│   │   ├── jp_idle_2.wav
+│   │   ├── th_idle_1.wav
+│   │   ├── th_idle_2.wav
+│   ├── think/
+│   │   ├── en_think_1.wav
+│   │   ├── en_think_2.wav
+│   │   ├── jp_think_1.wav
+│   │   ├── jp_think_2.wav
+│   │   ├── th_think_1.wav
+│   │   ├── th_think_2.wav
 │-- output/
 │   ├── ro-th.wav
 │-- target/
 │   ├── speaker-en.wav
 │   ├── speaker-jp.wav
 │   ├── speaker-th.wav
-│-- Talk_EN.py
-│-- Talk_JP.py
-│-- Talk_TH.py
+│-- other/
+│   ├── Nene.png
+│   ├── Terminal.png
+│-- run.py
+│-- requirements.txt
+│-- README.md
+│-- .env
 ```
 
 ## Configuration
@@ -121,4 +139,5 @@ This project is open-source and free to use under the MIT License.
 
 ---
 🎤 **Enjoy chatting with Nene!** 😊
+````
 

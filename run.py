@@ -14,6 +14,7 @@ import pyaudio
 import time
 import threading
 import random
+import ollama
 
 load_dotenv()
 api_key = os.getenv('OPENROUTER_API_KEY')
@@ -52,56 +53,53 @@ def detect_language(text):
     except:
         return "unsupported"
 
-def get_response_from_deepseek(text, lang):
+def get_response_from_deepseek(text, lang, api=True):
     print("[🧡 Process] Nene is deep in thought, stressed out!\n")
     global conversation_history
 
-    if lang == "en":
-        text = "Rule: Please answer only English" + text
-    elif lang == "th":
-        text = "ข้อบังคับ: ตอบเป็นภาษาไทยเท่านั้น" + text
-    elif lang == "ja":
-        text = "規定：日本語のみでご回答ください。" + text
-
+    lang_rules = {
+        "en": "Rule: Please answer only English",
+        "th": "ข้อบังคับ: ตอบเป็นภาษาไทยเท่านั้น",
+        "ja": "規定：日本語のみでご回答ください。"
+    }
+    
+    if lang in lang_rules:
+        text = lang_rules[lang] + text
+    
     conversation_history.append({"role": "user", "content": text})
 
-    try:
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-        }
+    if api:
+        try:
+            headers = {"Authorization": f"Bearer {api_key}"}
+            payload = {
+                "model": setup_role["model"],
+                "messages": conversation_history
+            }
+            response = requests.post(
+                url="https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                data=json.dumps(payload)
+            )
+            if response.status_code == 200:
+                response_json = response.json()
+                response_text = response_json['choices'][0]['message']['content']
+            else:
+                print(f"Error: {response.status_code}, {response.text}")
+                return "Sorry, something went wrong. Please try again."
+        except Exception as e:
+            print(f"Error while communicating with OpenRouter API: {e}")
+            return "Sorry, something went wrong with my brain. Please try again!"
+    else:
+        response = ollama.chat(model=setup_role["model"], messages=conversation_history)
+        response_text = response['message']['content']
 
-        payload = {
-            "model": "deepseek/deepseek-r1:free",
-            # "model": "deepseek/deepseek-r1-distill-qwen-14b",
-            "messages": conversation_history
-        }
+    start_idx = response_text.find('<think>')
+    end_idx = response_text.find('</think>')
+    if start_idx != -1 and end_idx != -1:
+        response_text = response_text[:start_idx] + response_text[end_idx + len('</think>'):]
 
-        response = requests.post(
-            url="https://openrouter.ai/api/v1/chat/completions",
-            headers=headers,
-            data=json.dumps(payload)
-        )
-
-        if response.status_code == 200:
-            response_json = response.json()
-            response_text = response_json['choices'][0]['message']['content']
-
-            start_idx = response_text.find('<think>')
-            end_idx = response_text.find('</think>')
-
-            if start_idx != -1 and end_idx != -1:
-                response_text = response_text[:start_idx] + response_text[end_idx + len('</think>'):]
-
-            conversation_history.append({"role": "assistant", "content": response_text})
-
-            return response_text
-        else:
-            print(f"Error: {response.status_code}, {response.text}")
-            return "Sorry, something went wrong. Please try again."
-
-    except Exception as e:
-        print(f"Error while communicating with OpenRouter API: {e}")
-        return "Sorry, something went wrong with my brain. Please try again!"
+    conversation_history.append({"role": "assistant", "content": response_text})
+    return response_text
 
 def text_to_speech(name, lang, text):
     global stop_thinking_sound 
@@ -196,15 +194,27 @@ def sound_loop(sound_type,lang="random"):
         play_audio(sound_choice)
 
 def main():
-    global stop_thinking_sound,stop_idle_sound
+    global stop_thinking_sound, stop_idle_sound
     print("Welcome to Chat with Nene! 💖 (Type 'exit' or 'quit' to leave)")
+    run_mode = input("\n👧🏼 Choose run mode (1: Local, 2: Server, exit: Quit): ").strip().lower()
 
     while True:
         stop_idle_sound = False
         idle_thread = threading.Thread(target=sound_loop, args=('idle',), daemon=True)
         idle_thread.start()
-        mode = input("\n👧🏼 Choose mode (1: Voice Mode, 2: Text Mode, exit: Quit): ").strip().lower()
+        
+        if run_mode in ["exit", "quit"]:
+            print("Goodbye! See you again 💕")
+            break  
+        elif run_mode == "1":
+            use_api = False
+        elif run_mode == "2":
+            use_api = True
+        else:
+            print("[❌ Error] Invalid choice. Please enter 1 or 2.")
+            continue
 
+        mode = input("\n👧🏼 Choose mode (1: Voice Mode, 2: Text Mode, exit: Quit): ").strip().lower()
         if mode in ["exit", "quit"]:
             print("Goodbye! See you again 💕")
             break  
@@ -224,16 +234,16 @@ def main():
             continue
 
         lang = detect_language(text)
-
         if lang == "unsupported":
             print("[❌ Error] Sorry, the language is not supported yet. Please use English, Thai, or Japanese.")
             continue 
-        thinking_thread = threading.Thread(target=sound_loop, args=('think',lang), daemon=True)
+        
+        thinking_thread = threading.Thread(target=sound_loop, args=('think', lang), daemon=True)
         thinking_thread.start()
         stop_idle_sound = True
         stop_thinking_sound = False
 
-        response_text = get_response_from_deepseek(text, lang)
+        response_text = get_response_from_deepseek(text, lang, use_api)
         if response_text:
             print(f"[❤️ Process] Response from Nene\n {response_text}")
             text_to_speech("nene_response", lang, response_text)
